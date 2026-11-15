@@ -1,4 +1,4 @@
-name: Build Geode Mod
+name: Build StatsEditor
 
 on:
   workflow_dispatch:
@@ -14,6 +14,7 @@ jobs:
         config:
           - name: Windows
             os: windows-latest
+            build-type: RelWithDebInfo
           - name: macOS
             os: macos-latest
           - name: iOS
@@ -28,25 +29,52 @@ jobs:
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Build the mod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build
         uses: geode-sdk/build-geode-mod@main
         with:
+          export-pdb: true
           combine: true
+          sdk: "given"
           target: ${{ matrix.config.target }}
+          ccache-variant: ccache
+          build-config: ${{ matrix.config.build-type || 'Release' }}
 
   package:
     name: Package builds
     runs-on: ubuntu-latest
-    needs: ['build']
-    steps:
-      - uses: geode-sdk/build-geode-mod/combine@main
-        id: build
+    needs: [build]
 
-      - uses: actions/upload-artifact@v4
+    steps:
+      - name: Combine builds
+        uses: geode-sdk/build-geode-mod/combine@main
+        with:
+          zstd: true
+          optimize-pngs: true
+        id: build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
-          
+
+{
+	"geode": "5.11.2",
+	"version": "v1.0.0",
+	"id": "odpmod101.statseditor",
+	"name": "StatsEditor",
+	"gd": {
+		"win": "2.2091",
+		"mac": "2.2081",
+		"ios": "2.2081",
+		"android": "2.2081"
+	},
+	"developers": [
+		"OdpMod101"
+	],
+	"description": "Edits stats from your account. You can edit stats and make them visible to everyone!"
+}
