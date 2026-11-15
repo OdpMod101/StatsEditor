@@ -2,6 +2,8 @@
 #include <Geode/modify/ProfilePage.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
+#include <Geode/ui/BasedButtonSprite.hpp>
+#include <cstdio>
 #include <cstdlib>
 
 using namespace geode::prelude;
@@ -35,7 +37,11 @@ protected:
             auto input = TextInput::create(120.f, "0", "bigFont.fnt");
             input->setCommonFilter(CommonFilter::Uint);
             input->setMaxCharCount(9);
-            input->setString(gd::string(std::to_string(gsm->getStat(statKey))));
+
+            char buf[32];
+            std::snprintf(buf, sizeof(buf), "%d", gsm->getStat(statKey));
+            input->setString(buf);
+
             input->setPosition({winSize.width - 85.f, yPos});
             m_mainLayer->addChild(input);
 
