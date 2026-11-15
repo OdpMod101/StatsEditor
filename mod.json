@@ -1,14 +1,16 @@
 {
-    "geode": "4.0.0",
-    "gd": {
-        "win": "2.208",
-        "android": "2.208",
-        "mac": "2.208",
-        "ios": "2.208"
-    },
-    "id": "odpmod.statseditor",
-    "name": "StatsEditor",
-    "version": "v1.0.0",
-    "developer": "OdpMod",
-    "description": "Edits stats from your account. You can edit stats and make them visible to everyone!"
+	"geode": "5.11.2",
+	"version": "v1.0.0",
+	"id": "odpmod101.statseditor",
+	"name": "StatsEditor",
+	"gd": {
+		"win": "2.2091",
+		"mac": "2.2081",
+		"ios": "2.2081",
+		"android": "2.2081"
+	},
+	"developers": [
+		"OdpMod101"
+	],
+	"description": "Edits stats from your account. You can edit stats and make them visible to everyone!"
 }
