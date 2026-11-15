@@ -2,6 +2,7 @@
 #include <Geode/modify/ProfilePage.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
+#include <cstdlib>
 
 using namespace geode::prelude;
 
@@ -34,7 +35,7 @@ protected:
             auto input = TextInput::create(120.f, "0", "bigFont.fnt");
             input->setCommonFilter(CommonFilter::Uint);
             input->setMaxCharCount(9);
-            input->setString(std::to_string(gsm->getStat(statKey)));
+            input->setString(gd::string(std::to_string(gsm->getStat(statKey))));
             input->setPosition({winSize.width - 85.f, yPos});
             m_mainLayer->addChild(input);
 
@@ -66,7 +67,10 @@ protected:
         auto parseVal = [](TextInput* input, int fallback) -> int {
             auto str = input->getString();
             if (str.empty()) return fallback;
-            return geode::utils::numFromString<int>(str).unwrapOr(fallback);
+            char* endPtr = nullptr;
+            long val = std::strtol(str.c_str(), &endPtr, 10);
+            if (endPtr == str.c_str()) return fallback;
+            return static_cast<int>(val);
         };
 
         gsm->setStat("6",  parseVal(m_starsInput, gsm->getStat("6")));
@@ -76,12 +80,10 @@ protected:
         gsm->setStat("12", parseVal(m_userCoinsInput, gsm->getStat("12")));
         gsm->setStat("5",  parseVal(m_demonsInput, gsm->getStat("5")));
 
-        // Wysłanie nowych statystyk na serwery GD, aby były widoczne dla innych
         if (auto glm = GameLevelManager::sharedState()) {
             glm->updateUserScore();
         }
 
-        // Odświeżenie ekranu profilu
         if (m_profilePage && m_profilePage->m_score) {
             m_profilePage->loadPageFromUserInfo(m_profilePage->m_score);
         }
