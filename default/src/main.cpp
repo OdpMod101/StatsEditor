@@ -1,117 +1,138 @@
-{%- if comments -%}
-/**
- * Include the Geode headers.
- */
-{% endif -%}
 #include <Geode/Geode.hpp>
-{% if comments %}
-/**
- * Brings cocos2d and all Geode namespaces to the current scope.
- */
-{%- endif %}
+#include <Geode/modify/ProfilePage.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <Geode/ui/TextInput.hpp>
+
 using namespace geode::prelude;
-{% if comments %}
-/**
- * `$modify` lets you extend and modify GD's classes.
- * To hook a function in Geode, simply $modify the class
- * and write a new function definition with the signature of
- * the function you want to hook.
- *
- * Here we use the overloaded `$modify` macro to set our own class name,
- * so that we can use it for button callbacks.
- *
- * Notice the header being included, you *must* include the header for
- * the class you are modifying, or you will get a compile error.
- *
- * Another way you could do this is like this:
- *
- * struct MyMenuLayer : Modify<MyMenuLayer, MenuLayer> {};
- */
-{%- endif %}
-#include <Geode/modify/MenuLayer.hpp>
-class $modify(MyMenuLayer, MenuLayer) {
-{%- if comments %}
-	/**
-	 * Typically classes in GD are initialized using the `init` function, (though not always!),
-	 * so here we use it to add our own button to the bottom menu.
-	 *
-	 * Note that for all hooks, your signature has to *match exactly*,
-	 * `void init()` would not place a hook!
-	*/
-{%- endif %}
-	bool init() {
-{%- if comments %}
-		/**
-		 * We call the original init function so that the
-		 * original class is properly initialized.
-		 */
-{%- endif %}
-		if (!MenuLayer::init()) {
-			return false;
-		}
-{% if comments %}
-		/**
-		 * You can use methods from the `geode::log` namespace to log messages to the console,
-		 * being useful for debugging and such. See this page for more info about logging:
-		 * https://docs.geode-sdk.org/tutorials/logging
-		*/
-{%- endif %}
-		log::debug("Hello from my MenuLayer::init hook! This layer has {} children.", this->getChildrenCount());
-{% if comments %}
-		/**
-		 * See this page for more info about buttons
-		 * https://docs.geode-sdk.org/tutorials/buttons
-		*/
-{%- endif %}
-		auto myButton = CCMenuItemSpriteExtra::create(
-			CCSprite::createWithSpriteFrameName("GJ_likeBtn_001.png"),
-			this,
-{%- if comments %}
-			/**
-			 * Here we use the name we set earlier for our modify class.
-			*/
-{%- endif %}
-			menu_selector(MyMenuLayer::onMyButton)
-		);
-{% if comments %}
-		/**
-		 * Here we access the `bottom-menu` node by its ID, and add our button to it.
-		 * Node IDs are a Geode feature, see this page for more info about it:
-		 * https://docs.geode-sdk.org/tutorials/nodetree
-		*/
-{%- endif %}
-		auto menu = this->getChildByID("bottom-menu");
-		menu->addChild(myButton);
-{% if comments %}
-		/**
-		 * The `_spr` string literal operator just prefixes the string with
-		 * your mod id followed by a slash. This is good practice for setting your own node ids.
-		*/
-{%- endif %}
-		myButton->setID("my-button"_spr);
-{% if comments %}
-		/**
-		 * We update the layout of the menu to ensure that our button is properly placed.
-		 * This is yet another Geode feature, see this page for more info about it:
-		 * https://docs.geode-sdk.org/tutorials/layouts
-		*/
-{%- endif %}
-		menu->updateLayout();
-{% if comments %}
-		/**
-		 * We return `true` to indicate that the class was properly initialized.
-		 */
-{%- endif %}
-		return true;
-	}
-{% if comments %}
-	/**
-	 * This is the callback function for the button we created earlier.
-	 * The signature for button callbacks must always be the same,
-	 * return type `void` and taking a `CCObject*`.
-	*/
-{%- endif %}
-	void onMyButton(CCObject*) {
-		FLAlertLayer::create("Geode", "Hello from my custom mod!", "OK")->show();
-	}
+
+class StatsEditorPopup : public geode::Popup {
+protected:
+    TextInput* m_starsInput = nullptr;
+    TextInput* m_moonsInput = nullptr;
+    TextInput* m_diamondsInput = nullptr;
+    TextInput* m_coinsInput = nullptr;
+    TextInput* m_userCoinsInput = nullptr;
+    TextInput* m_demonsInput = nullptr;
+    ProfilePage* m_profilePage = nullptr;
+
+    bool init(ProfilePage* page) {
+        if (!Popup::init(320.f, 255.f)) return false;
+
+        m_profilePage = page;
+        this->setTitle("StatsEditor - Edit Account Stats");
+
+        auto gsm = GameStatsManager::sharedState();
+        auto winSize = m_mainLayer->getContentSize();
+
+        auto createRow = [&](const char* labelText, const char* statKey, float yPos) -> TextInput* {
+            auto label = CCLabelBMFont::create(labelText, "bigFont.fnt");
+            label->setScale(0.45f);
+            label->setAnchorPoint({0.f, 0.5f});
+            label->setPosition({25.f, yPos});
+            m_mainLayer->addChild(label);
+
+            auto input = TextInput::create(120.f, "0", "bigFont.fnt");
+            input->setCommonFilter(CommonFilter::Uint);
+            input->setMaxCharCount(9);
+            input->setString(std::to_string(gsm->getStat(statKey)));
+            input->setPosition({winSize.width - 85.f, yPos});
+            m_mainLayer->addChild(input);
+
+            return input;
+        };
+
+        m_starsInput     = createRow("Stars:", "6", 205.f);
+        m_moonsInput     = createRow("Moons:", "28", 175.f);
+        m_diamondsInput  = createRow("Diamonds:", "13", 145.f);
+        m_coinsInput     = createRow("Secret Coins:", "8", 115.f);
+        m_userCoinsInput = createRow("User Coins:", "12", 85.f);
+        m_demonsInput    = createRow("Demons:", "5", 55.f);
+
+        auto saveSpr = ButtonSprite::create("Save & Sync", "goldFont.fnt", "GJ_button_01.png", 0.8f);
+        auto saveBtn = CCMenuItemSpriteExtra::create(
+            saveSpr,
+            this,
+            menu_selector(StatsEditorPopup::onSave)
+        );
+        saveBtn->setPosition({winSize.width / 2.f, 22.f});
+        m_buttonMenu->addChild(saveBtn);
+
+        return true;
+    }
+
+    void onSave(CCObject*) {
+        auto gsm = GameStatsManager::sharedState();
+
+        auto parseVal = [](TextInput* input, int fallback) -> int {
+            auto str = input->getString();
+            if (str.empty()) return fallback;
+            return geode::utils::numFromString<int>(str).unwrapOr(fallback);
+        };
+
+        gsm->setStat("6",  parseVal(m_starsInput, gsm->getStat("6")));
+        gsm->setStat("28", parseVal(m_moonsInput, gsm->getStat("28")));
+        gsm->setStat("13", parseVal(m_diamondsInput, gsm->getStat("13")));
+        gsm->setStat("8",  parseVal(m_coinsInput, gsm->getStat("8")));
+        gsm->setStat("12", parseVal(m_userCoinsInput, gsm->getStat("12")));
+        gsm->setStat("5",  parseVal(m_demonsInput, gsm->getStat("5")));
+
+        // Wysłanie nowych statystyk na serwery GD, aby były widoczne dla innych
+        if (auto glm = GameLevelManager::sharedState()) {
+            glm->updateUserScore();
+        }
+
+        // Odświeżenie ekranu profilu
+        if (m_profilePage && m_profilePage->m_score) {
+            m_profilePage->loadPageFromUserInfo(m_profilePage->m_score);
+        }
+
+        this->onClose(nullptr);
+
+        FLAlertLayer::create(
+            "Stats Updated!",
+            "Your stats have been <cg>saved</c> and synced to your online profile!",
+            "OK"
+        )->show();
+    }
+
+public:
+    static StatsEditorPopup* create(ProfilePage* page) {
+        auto ret = new StatsEditorPopup();
+        if (ret->init(page)) {
+            ret->autorelease();
+            return ret;
+        }
+        delete ret;
+        return nullptr;
+    }
+};
+
+class $modify(StatsEditorProfile, ProfilePage) {
+    void loadPageFromUserInfo(GJUserScore* score) {
+        ProfilePage::loadPageFromUserInfo(score);
+
+        if (!m_ownProfile) return;
+        if (this->getChildByIDRecursive("stats-editor-btn"_spr)) return;
+
+        auto menu = this->getChildByIDRecursive("left-menu");
+        if (!menu) return;
+
+        auto spr = CircleButtonSprite::createWithSpriteFrameName(
+            "GJ_starsIcon_001.png", 1.0f, CircleBaseColor::Green, CircleBaseSize::Small
+        );
+
+        auto btn = CCMenuItemSpriteExtra::create(
+            spr,
+            this,
+            menu_selector(StatsEditorProfile::onOpenEditor)
+        );
+        btn->setID("stats-editor-btn"_spr);
+
+        menu->addChild(btn);
+        menu->updateLayout();
+    }
+
+    void onOpenEditor(CCObject*) {
+        StatsEditorPopup::create(this)->show();
+    }
 };
