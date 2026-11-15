@@ -61,20 +61,4 @@ jobs:
         with:
           name: Build Output
           path: ${{ steps.build.outputs.build-output }}
-
-{
-	"geode": "5.11.2",
-	"version": "v1.0.0",
-	"id": "odpmod101.statseditor",
-	"name": "StatsEditor",
-	"gd": {
-		"win": "2.2091",
-		"mac": "2.2081",
-		"ios": "2.2081",
-		"android": "2.2081"
-	},
-	"developers": [
-		"OdpMod101"
-	],
-	"description": "Edits stats from your account. You can edit stats and make them visible to everyone!"
-}
+		  
