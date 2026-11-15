@@ -2,7 +2,6 @@
 #include <Geode/modify/ProfilePage.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
-#include <Geode/ui/BasedButtonSprite.hpp>
 #include <cstdio>
 #include <cstdlib>
 
